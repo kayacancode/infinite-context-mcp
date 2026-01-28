@@ -8,27 +8,62 @@ This plugin bridges the Infinite Context MCP Python server to Clawdbot, providin
 - **Fact Extraction** - Atomic knowledge extraction and chaining
 - **Smart Indexing** - Index repos, docs, websites, and local files
 
-## Setup
+## Quick Start
 
-### 1. Start the Python Server
+### 1. Set Up Environment Variables
 
-The plugin requires the Infinite Context Python API server running:
+Create a `.env` file in the plugin directory or export these environment variables:
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Set environment variables
+# Required
 export PINECONE_API_KEY="your-pinecone-api-key"
 export OPENAI_API_KEY="your-openai-api-key"
-export PINECONE_INDEX_NAME="infinite-context-index"
 
-# Start the API server (you may need to add a FastAPI wrapper)
-# See start_api.sh or run with uvicorn
-python -m uvicorn api:app --host 0.0.0.0 --port 8000
+# Optional
+export PINECONE_INDEX_NAME="infinite-context-index"  # Defaults to this
+export INFINITE_CONTEXT_PORT="8787"                  # API server port
+export INFINITE_CONTEXT_HOST="0.0.0.0"               # API server host
+export GITHUB_TOKEN="your-github-token"              # For indexing private repos
 ```
 
-### 2. Configure the Plugin
+### 2. Install Python Dependencies
+
+```bash
+cd /path/to/infinite-context-plugin
+
+# Create virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 3. Start the Python API Server
+
+```bash
+# Option 1: Direct run
+python api.py
+
+# Option 2: Using uvicorn (more control)
+uvicorn api:app --host 0.0.0.0 --port 8787 --reload
+
+# Option 3: Background with logging
+nohup python api.py > api.log 2>&1 &
+```
+
+The server will start at `http://localhost:8787`. Test it:
+
+```bash
+curl http://localhost:8787/health
+```
+
+Expected response:
+```json
+{"status":"healthy","service":"infinite-context-api","session":"...","chunk_count":0}
+```
+
+### 4. Configure the Clawdbot Plugin
 
 Add to your Clawdbot config (`~/.clawdbot/config.json5`):
 
@@ -40,7 +75,7 @@ Add to your Clawdbot config (`~/.clawdbot/config.json5`):
         // Path to this plugin directory
         path: "/path/to/infinite-context-plugin",
         config: {
-          serverUrl: "http://localhost:8000",
+          serverUrl: "http://localhost:8787",
           // Optional API key for authentication
           apiKey: "${INFINITE_CONTEXT_API_KEY}",
           // User ID for profile isolation
@@ -58,7 +93,7 @@ Add to your Clawdbot config (`~/.clawdbot/config.json5`):
 }
 ```
 
-### 3. Enable Optional Tools
+### 5. Enable Optional Tools (If Needed)
 
 Some tools are optional and must be explicitly enabled in your agent config:
 
@@ -85,7 +120,51 @@ Some tools are optional and must be explicitly enabled in your agent config:
 }
 ```
 
-## Available Tools
+### 6. Verify Installation
+
+```bash
+# Check plugin is loaded
+clawdbot doctor
+
+# Test server connection
+clawdbot ic status
+
+# Show memory stats
+clawdbot ic stats
+```
+
+## API Endpoints
+
+The Python API server exposes these endpoints:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/api/save_context` | POST | Save conversation context |
+| `/api/search_context` | POST | Search saved contexts |
+| `/api/enhanced_search` | POST | Enhanced search with query understanding |
+| `/api/ask_question` | POST | RAG question answering |
+| `/api/auto_compress` | POST | Compress and save conversation |
+| `/api/get_memory_stats` | GET/POST | Get memory statistics |
+| `/api/get_user_profile` | GET/POST | Get user profile |
+| `/api/update_user_profile` | POST | Update user profile |
+| `/api/query_knowledge_graph` | POST | Query entity relationships |
+| `/api/get_graph_summary` | GET/POST | Get knowledge graph summary |
+| `/api/query_facts` | POST | Query extracted facts |
+| `/api/get_fact_summary` | GET/POST | Get fact summary |
+| `/api/index_repository` | POST | Index a GitHub repository |
+| `/api/index_documentation` | POST | Index a documentation site |
+| `/api/index_website` | POST | Index a full website |
+| `/api/index_local_filesystem` | POST | Index a local directory |
+| `/api/index_url` | POST | Index a single URL |
+| `/api/check_indexing_status` | GET/POST | Check indexing status |
+| `/api/list_indexed_sources` | GET/POST | List indexed sources |
+| `/api/delete_indexed_source` | DELETE/POST | Delete an indexed source |
+| `/api/classify_query` | POST | Classify query intent |
+| `/api/rewrite_query` | POST | Generate query rewrites |
+| `/api/smart_action` | POST | Natural language orchestration |
+
+## Available Clawdbot Tools
 
 ### Core Memory Tools
 
@@ -197,14 +276,24 @@ When enabled, automatically analyzes conversations after they end and saves impo
 ```
 ┌─────────────────────┐     HTTP      ┌─────────────────────┐
 │   Clawdbot Agent    │◄────────────►│  Python API Server  │
-│  (index.ts plugin)  │               │     (main.py)       │
+│  (index.ts plugin)  │               │     (api.py)        │
 └─────────────────────┘               └─────────────────────┘
                                                │
                                                ▼
                                       ┌─────────────────────┐
-                                      │     Pinecone        │
-                                      │   (Vector Store)    │
+                                      │  InfiniteContextMCP │
+                                      │     (main.py)       │
                                       └─────────────────────┘
+                                               │
+                           ┌───────────────────┼───────────────────┐
+                           ▼                   ▼                   ▼
+                    ┌───────────┐      ┌───────────┐      ┌───────────┐
+                    │ Pinecone  │      │  OpenAI   │      │  Memory   │
+                    │  (Vector  │      │ (Embed +  │      │  System   │
+                    │   Store)  │      │   LLM)    │      │ (Profile, │
+                    └───────────┘      └───────────┘      │  Graph,   │
+                                                          │  Facts)   │
+                                                          └───────────┘
 ```
 
 ## Requirements
@@ -214,13 +303,42 @@ When enabled, automatically analyzes conversations after they end and saves impo
 - OpenAI API key
 - Node.js 18+ for Clawdbot
 
+## Testing the Integration
+
+After setup, test the full integration:
+
+```bash
+# 1. Start the Python API server
+cd /path/to/infinite-context-plugin
+source venv/bin/activate
+python api.py &
+
+# 2. Test health endpoint
+curl http://localhost:8787/health
+
+# 3. Test save context
+curl -X POST http://localhost:8787/api/save_context \
+  -H "Content-Type: application/json" \
+  -d '{"summary": "Test context", "topics": ["testing"]}'
+
+# 4. Test search
+curl -X POST http://localhost:8787/api/search_context \
+  -H "Content-Type: application/json" \
+  -d '{"query": "test"}'
+
+# 5. Test via Clawdbot CLI
+clawdbot ic status
+clawdbot ic stats
+```
+
 ## Troubleshooting
 
 ### Server Not Available
 If you see "server not available" warnings:
-1. Ensure the Python server is running
-2. Check the `serverUrl` in your config
-3. Verify network connectivity
+1. Ensure the Python server is running: `python api.py`
+2. Check the `serverUrl` in your config matches the running server
+3. Verify network connectivity: `curl http://localhost:8787/health`
+4. Check for port conflicts
 
 ### No Results Found
 1. Make sure you've saved some context first
@@ -231,3 +349,41 @@ If you see "server not available" warnings:
 1. Check that the plugin is properly loaded: `clawdbot doctor`
 2. Verify optional tools are in your allowlist
 3. Check for config validation errors
+
+### Pinecone Connection Issues
+1. Verify `PINECONE_API_KEY` is set correctly
+2. Check the index name matches your Pinecone dashboard
+3. Ensure your Pinecone region matches the code (default: us-east-1)
+
+### OpenAI API Errors
+1. Verify `OPENAI_API_KEY` is set correctly
+2. Check your OpenAI account has API access
+3. Monitor rate limits
+
+## Development
+
+### Running in Development Mode
+
+```bash
+# Start API with auto-reload
+uvicorn api:app --host 0.0.0.0 --port 8787 --reload
+
+# View logs
+tail -f api.log
+```
+
+### API Documentation
+
+When the server is running, visit:
+- Swagger UI: http://localhost:8787/docs
+- ReDoc: http://localhost:8787/redoc
+
+### Running Tests
+
+```bash
+# Test API endpoints
+python -m pytest tests/ -v
+
+# Test specific endpoint
+curl -X POST http://localhost:8787/api/get_memory_stats
+```
