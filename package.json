@@ -5,7 +5,7 @@
   "description": "Clawdbot plugin for Infinite Context MCP - AI memory layer with vector search, knowledge graphs, and fact extraction",
   "main": "index.ts",
   "dependencies": {
-    "@sinclair/typebox": "0.34.47"
+    "@sinclair/typebox": "^0.34.47"
   },
   "clawdbot": {
     "extensions": [

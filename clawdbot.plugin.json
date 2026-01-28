@@ -7,7 +7,7 @@
   "uiHints": {
     "serverUrl": {
       "label": "Server URL",
-      "placeholder": "http://localhost:8000",
+      "placeholder": "http://localhost:8787",
       "help": "URL of the Infinite Context Python API server"
     },
     "apiKey": {
@@ -43,7 +43,7 @@
       "serverUrl": {
         "type": "string",
         "description": "URL of the Infinite Context Python API server",
-        "default": "http://localhost:8000"
+        "default": "http://localhost:8787"
       },
       "apiKey": {
         "type": "string",
@@ -70,6 +70,6 @@
         "default": 5
       }
     },
-    "required": ["serverUrl"]
+    "required": []
   }
 }
