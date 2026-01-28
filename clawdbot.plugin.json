@@ -1,0 +1,75 @@
+{
+  "id": "infinite-context",
+  "kind": "memory",
+  "name": "Infinite Context",
+  "description": "AI memory layer with vector search, knowledge graphs, fact extraction, and user profiles. Bridges to the Infinite Context MCP Python server.",
+  "version": "1.0.0",
+  "uiHints": {
+    "serverUrl": {
+      "label": "Server URL",
+      "placeholder": "http://localhost:8000",
+      "help": "URL of the Infinite Context Python API server"
+    },
+    "apiKey": {
+      "label": "API Key",
+      "sensitive": true,
+      "placeholder": "your-api-key",
+      "help": "Optional API key for server authentication"
+    },
+    "userId": {
+      "label": "User ID",
+      "placeholder": "default_user",
+      "help": "User identifier for profile isolation"
+    },
+    "autoRecall": {
+      "label": "Auto-Recall",
+      "help": "Automatically inject relevant memories into context"
+    },
+    "autoCapture": {
+      "label": "Auto-Capture",
+      "help": "Automatically save important conversation context"
+    },
+    "defaultTopK": {
+      "label": "Default Results",
+      "placeholder": "5",
+      "advanced": true,
+      "help": "Default number of results to return from searches"
+    }
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "serverUrl": {
+        "type": "string",
+        "description": "URL of the Infinite Context Python API server",
+        "default": "http://localhost:8000"
+      },
+      "apiKey": {
+        "type": "string",
+        "description": "Optional API key for server authentication"
+      },
+      "userId": {
+        "type": "string",
+        "description": "User identifier for profile isolation",
+        "default": "default_user"
+      },
+      "autoRecall": {
+        "type": "boolean",
+        "description": "Automatically inject relevant memories into context",
+        "default": false
+      },
+      "autoCapture": {
+        "type": "boolean",
+        "description": "Automatically save important conversation context",
+        "default": false
+      },
+      "defaultTopK": {
+        "type": "number",
+        "description": "Default number of results to return",
+        "default": 5
+      }
+    },
+    "required": ["serverUrl"]
+  }
+}

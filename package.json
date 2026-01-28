@@ -1,0 +1,25 @@
+{
+  "name": "@clawdbot/infinite-context",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Clawdbot plugin for Infinite Context MCP - AI memory layer with vector search, knowledge graphs, and fact extraction",
+  "main": "index.ts",
+  "dependencies": {
+    "@sinclair/typebox": "0.34.47"
+  },
+  "clawdbot": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "keywords": [
+    "clawdbot",
+    "plugin",
+    "memory",
+    "vector-search",
+    "knowledge-graph",
+    "rag"
+  ],
+  "author": "",
+  "license": "MIT"
+}
